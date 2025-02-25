@@ -132,7 +132,9 @@ export default function Home() {
                 className="object-contain mb-2"
               />
               <h2 className="font-semibold text-center text-sm mb-1">
-                {product.title}
+                {product.title.length > 30
+                  ? product.title.slice(0, 30) + "..."
+                  : product.title}
               </h2>
               <p className="text-gray-500 text-sm mb-1">
                 $ {product.price.toFixed(2)}
