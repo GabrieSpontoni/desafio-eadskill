@@ -24,7 +24,7 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [sortOrder, setSortOrder] = useState<string>("asc");
+  const [sortOrder, setSortOrder] = useState<string>("");
 
   const fetchCategories = async () => {
     try {
@@ -43,25 +43,21 @@ export default function Home() {
   ) => {
     setLoading(true);
     try {
-      let url = `https://fakestoreapi.com/products?limit=${currentLimit}`;
+      let url = `https://fakestoreapi.com/products?limit=${currentLimit}&sort=asc`;
       if (category !== "all") {
         url = `https://fakestoreapi.com/products/category/${category}?limit=${currentLimit}`;
       }
       const response = await fetch(url);
-      let data: Product[] = await response.json();
-
-      const highlight = data.filter((p) => p.rating.rate > 4.5);
-      const normal = data.filter((p) => p.rating.rate <= 4.5);
+      const data: Product[] = await response.json();
 
       if (order === "asc") {
-        highlight.sort((a, b) => a.price - b.price);
-        normal.sort((a, b) => a.price - b.price);
-      } else {
-        highlight.sort((a, b) => b.price - a.price);
-        normal.sort((a, b) => b.price - a.price);
+        data.sort((a, b) => a.price - b.price);
       }
 
-      data = [...highlight, ...normal];
+      if (order === "desc") {
+        data.sort((a, b) => b.price - a.price);
+      }
+
       setProducts(data);
     } catch (error) {
       console.error(error);
@@ -117,6 +113,7 @@ export default function Home() {
             onChange={handleSortChange}
             className="block w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 pr-8 text-gray-100"
           >
+            <option value="">Nenhum</option>
             <option value="asc">Menor preço</option>
             <option value="desc">Maior preço</option>
           </select>
