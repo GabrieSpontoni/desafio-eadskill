@@ -1,20 +1,51 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 "use client";
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
-export default function Home() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [limit, setLimit] = useState(8);  
-  const [loading, setLoading] = useState(false);
+interface Rating {
+  rate: number;
+  count: number;
+}
 
-  const fetchProducts = async (currentLimit: number) => {
+interface Product {
+  id: number;
+  title: string;
+  price: number;
+  description: string;
+  category: string;
+  image: string;
+  rating: Rating;
+}
+
+export default function Home() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [limit, setLimit] = useState<number>(8);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("https://fakestoreapi.com/products/categories");
+      const data = await res.json();
+      setCategories(data);
+    } catch (error) {
+      console.error("Erro ao buscar categorias:", error);
+    }
+  };
+
+  const fetchProducts = async (currentLimit: number, category: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://fakestoreapi.com/products?limit=${currentLimit}`);
-      const data = await response.json();
+      let url = `https://fakestoreapi.com/products?limit=${currentLimit}`;
+      if (category !== "all") {
+        url = `https://fakestoreapi.com/products/category/${category}`;
+      }
+      const response = await fetch(url);
+      const data: Product[] = await response.json();
+      console.log(data);
       setProducts(data);
     } catch (error) {
       console.error("Erro ao buscar produtos:", error);
@@ -24,18 +55,42 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchProducts(limit);
-  }, [limit]);
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    fetchProducts(limit, selectedCategory);
+  }, [limit, selectedCategory]);
 
   const handleLoadMore = () => {
-    const newLimit = limit + 8; 
+    const newLimit = limit + 8;
     setLimit(newLimit);
-    fetchProducts(newLimit); 
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCategory(e.target.value);
   };
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Lista de Produtos (Ver Mais)</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        Lista de Produtos (Ver Mais + Filtro)
+      </h1>
+
+      <div className="mb-4 relative inline-block w-60">
+        <select
+          value={selectedCategory}
+          onChange={handleCategoryChange}
+          className="block w-full bg-white border border-gray-300 rounded px-4 py-2 pr-8 text-gray-700"
+        >
+          <option value="all">Todas as categorias</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {loading && <p>Carregando...</p>}
 
@@ -59,15 +114,13 @@ export default function Home() {
               <p className="text-gray-500 text-sm mb-1">
                 $ {product.price.toFixed(2)}
               </p>
-              <p className="text-xs text-gray-600 italic">
-                {product.category}
-              </p>
+              <p className="text-xs text-gray-600 italic">{product.category}</p>
             </div>
           ))}
         </div>
       )}
 
-      {!loading && products.length > 0 && (
+      {!loading && products.length > 0 && selectedCategory === "all" && (
         <div className="flex justify-center mt-6">
           <button
             onClick={handleLoadMore}
