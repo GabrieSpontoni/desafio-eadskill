@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { z } from "zod";
+import { ProductForm } from "@/components/ProductForm";
 
 interface Rating {
   rate: number;
@@ -23,29 +24,22 @@ const updateProductSchema = z.object({
   title: z
     .string()
     .min(1, "Título é obrigatório")
-    .max(30, "Título deve ter no máximo de 30 caracteres"),
+    .max(30, "Título deve ter no máximo 30 caracteres"),
   price: z
     .number({ invalid_type_error: "Preço deve ser um número" })
     .nonnegative("Preço não pode ser negativo"),
   description: z.string().min(1, "Descrição é obrigatória"),
   image: z.string().url("Imagem deve ser uma URL"),
+  category: z.string().min(1, "Categoria é obrigatória"),
 });
 
-export default function ProductEditPage() {
+export default function EditProductPage() {
   const router = useRouter();
   const params = useParams() as { id: string };
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState<number>(0);
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState("");
-
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
-  const [errors, setErrors] = useState<string[]>([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -53,55 +47,27 @@ export default function ProductEditPage() {
     }
   }, [params.id]);
 
-  const fetchProduct = async (id: string) => {
+  async function fetchProduct(id: string) {
     setLoading(true);
     try {
       const response = await fetch(`https://fakestoreapi.com/products/${id}`);
       const data: Product = await response.json();
       setProduct(data);
-      setTitle(data.title);
-      setPrice(data.price);
-      setDescription(data.description);
-      setImage(data.image);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function handleUpdate(values: z.infer<typeof updateProductSchema>) {
     if (!product) return;
-
-    setErrors([]);
-
-    const result = updateProductSchema.safeParse({
-      title,
-      price,
-      description,
-      image,
-    });
-
-    if (!result.success) {
-      const issues = result.error.issues.map(
-        (issue: { message: string }) => issue.message
-      );
-      setErrors(issues);
-      return;
-    }
-
     setLoading(true);
     try {
       await fetch(`https://fakestoreapi.com/products/${product.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...result.data,
-          category: product.category,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...values, category: product.category }),
       });
       router.push("/products");
     } catch (error) {
@@ -109,17 +75,9 @@ export default function ProductEditPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const openDeleteModal = () => {
-    setIsDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-  };
-
-  const handleDelete = async () => {
+  async function handleDelete() {
     if (!product) return;
     setLoading(true);
     try {
@@ -131,9 +89,9 @@ export default function ProductEditPage() {
       console.error(error);
     } finally {
       setLoading(false);
-      setIsDeleteModalOpen(false);
+      setDeleteModalOpen(false);
     }
-  };
+  }
 
   if (loading && !product) {
     return (
@@ -153,14 +111,14 @@ export default function ProductEditPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center p-4">
-      {isDeleteModalOpen && (
+      {deleteModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 border border-gray-700 p-6 rounded w-80">
             <h2 className="text-lg font-bold mb-4">Confirmar Exclusão</h2>
             <p className="mb-6">Tem certeza que deseja excluir este produto?</p>
             <div className="flex justify-end gap-2">
               <button
-                onClick={closeDeleteModal}
+                onClick={() => setDeleteModalOpen(false)}
                 className="px-4 py-2 bg-gray-600 rounded hover:bg-gray-700"
               >
                 Cancelar
@@ -176,95 +134,31 @@ export default function ProductEditPage() {
         </div>
       )}
 
-      <div className="max-w-md w-full bg-gray-800 p-6 rounded border border-gray-700 relative">
-        <div className="bg-orange-600 text-white text-sm rounded p-2 mb-4 font-semibold">
-          Atenção: as operações de criação, edição e exclusão não são
-          persistidas permanentemente, pois a API é apenas para testes.
-        </div>
+      <ProductForm
+        initialValues={{
+          title: product.title,
+          price: product.price,
+          description: product.description,
+          image: product.image,
+          category: product.category,
+        }}
+        schema={updateProductSchema}
+        onSubmit={handleUpdate}
+        loading={loading}
+        titleForm="Editar Produto"
+        disabledCategoryField={true}
+      />
 
-        <h1 className="text-xl font-bold mb-4 text-center">Editar Produto</h1>
-
-        {errors.length > 0 && (
-          <div className="bg-red-600 text-white text-sm rounded p-2 mb-4">
-            {errors.map((err, idx) => (
-              <p key={idx}>• {err}</p>
-            ))}
-          </div>
+      <div className="absolute bottom-8 right-8">
+        {!deleteModalOpen && (
+          <button
+            onClick={() => setDeleteModalOpen(true)}
+            disabled={loading}
+            className="bg-red-600 py-2 px-4 rounded hover:bg-red-700"
+          >
+            Excluir
+          </button>
         )}
-
-        <form onSubmit={handleUpdate} className="flex flex-col gap-4">
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">Título</label>
-            <input
-              className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">Preço</label>
-            <input
-              className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100"
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(Number(e.target.value))}
-              required
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">Descrição</label>
-            <textarea
-              className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">
-              Categoria (não editável)
-            </label>
-            <input
-              className="border border-gray-600 bg-gray-700 p-2 rounded cursor-not-allowed text-gray-100"
-              type="text"
-              value={product.category}
-              disabled
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">URL da Imagem</label>
-            <input
-              className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100"
-              type="text"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-            />
-          </div>
-
-          <div className="flex gap-2 justify-end">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-600 py-2 px-4 rounded hover:bg-blue-700"
-            >
-              {loading ? "Atualizando..." : "Salvar Alterações"}
-            </button>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={openDeleteModal}
-              className="bg-red-600 py-2 px-4 rounded hover:bg-red-700"
-            >
-              Excluir
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );
