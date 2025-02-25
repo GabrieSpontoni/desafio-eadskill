@@ -2,14 +2,20 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { z } from "zod";
 
-interface ProductInput {
-  title: string;
-  price: number;
-  description: string;
-  category: string;
-  image: string;
-}
+const createProductSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Título é obrigatório")
+    .max(30, "Título não pode ultrapassar 30 caracteres."),
+  price: z
+    .number({ invalid_type_error: "O preço deve ser um número válido." })
+    .nonnegative("Preço não pode ser negativo."),
+  description: z.string().min(1, "Descrição é obrigatória."),
+  category: z.string().min(1, "Categoria é obrigatória."),
+  image: z.string().url("Imagem deve ser uma URL."),
+});
 
 export default function CreateProductPage() {
   const router = useRouter();
@@ -22,31 +28,35 @@ export default function CreateProductPage() {
   const [category, setCategory] = useState("");
   const [image, setImage] = useState("");
 
+  const [errors, setErrors] = useState<string[]>([]);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.length > 30) {
-      alert("O título não pode ter mais de 30 caracteres.");
+    setErrors([]);
+
+    const parsed = createProductSchema.safeParse({
+      title,
+      price,
+      description,
+      category,
+      image,
+    });
+
+    if (!parsed.success) {
+      const issues = parsed.error.issues.map((issue) => issue.message);
+      setErrors(issues);
       return;
     }
 
     setLoading(true);
     try {
-      const productData: ProductInput = {
-        title,
-        price,
-        description,
-        category,
-        image
-      };
-
       await fetch("https://fakestoreapi.com/products", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(productData)
+        body: JSON.stringify(parsed.data),
       });
-
       router.push("/products");
     } catch (error) {
       console.error("Erro ao criar produto:", error);
@@ -64,6 +74,15 @@ export default function CreateProductPage() {
         </div>
 
         <h1 className="text-xl font-bold mb-4 text-center">Criar Produto</h1>
+
+        {errors.length > 0 && (
+          <div className="bg-red-600 text-white text-sm rounded p-2 mb-4">
+            {errors.map((err, idx) => (
+              <p key={idx}>• {err}</p>
+            ))}
+          </div>
+        )}
+
         <form onSubmit={handleCreate} className="flex flex-col gap-4">
           <div className="flex flex-col">
             <label className="text-sm font-medium mb-1">Título</label>
@@ -73,8 +92,6 @@ export default function CreateProductPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex.: Novo Produto"
-              maxLength={30}
-              required
             />
           </div>
 
@@ -87,7 +104,6 @@ export default function CreateProductPage() {
               value={price}
               onChange={(e) => setPrice(Number(e.target.value))}
               placeholder="Ex.: 99.90"
-              required
             />
           </div>
 
@@ -110,7 +126,6 @@ export default function CreateProductPage() {
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               placeholder='Ex.: "electronics"'
-              required
             />
           </div>
 

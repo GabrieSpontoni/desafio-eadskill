@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { z } from "zod";
 
 interface Rating {
   rate: number;
@@ -18,17 +19,33 @@ interface Product {
   rating: Rating;
 }
 
+const updateProductSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Título é obrigatório")
+    .max(30, "Título deve ter no máximo de 30 caracteres"),
+  price: z
+    .number({ invalid_type_error: "Preço deve ser um número" })
+    .nonnegative("Preço não pode ser negativo"),
+  description: z.string().min(1, "Descrição é obrigatória"),
+  image: z.string().url("Imagem deve ser uma URL"),
+});
+
 export default function ProductEditPage() {
   const router = useRouter();
   const params = useParams() as { id: string };
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
+
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState<number>(0);
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
     if (params.id) {
@@ -56,20 +73,35 @@ export default function ProductEditPage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!product) return;
+
+    setErrors([]);
+
+    const result = updateProductSchema.safeParse({
+      title,
+      price,
+      description,
+      image,
+    });
+
+    if (!result.success) {
+      const issues = result.error.issues.map(
+        (issue: { message: string }) => issue.message
+      );
+      setErrors(issues);
+      return;
+    }
+
     setLoading(true);
     try {
       await fetch(`https://fakestoreapi.com/products/${product.id}`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title,
-          price,
-          description,
-          image,
-          category: product.category
-        })
+          ...result.data,
+          category: product.category,
+        }),
       });
       router.push("/products");
     } catch (error) {
@@ -92,7 +124,7 @@ export default function ProductEditPage() {
     setLoading(true);
     try {
       await fetch(`https://fakestoreapi.com/products/${product.id}`, {
-        method: "DELETE"
+        method: "DELETE",
       });
       router.push("/products");
     } catch (error) {
@@ -151,6 +183,15 @@ export default function ProductEditPage() {
         </div>
 
         <h1 className="text-xl font-bold mb-4 text-center">Editar Produto</h1>
+
+        {errors.length > 0 && (
+          <div className="bg-red-600 text-white text-sm rounded p-2 mb-4">
+            {errors.map((err, idx) => (
+              <p key={idx}>• {err}</p>
+            ))}
+          </div>
+        )}
+
         <form onSubmit={handleUpdate} className="flex flex-col gap-4">
           <div className="flex flex-col">
             <label className="text-sm font-medium mb-1">Título</label>
@@ -159,7 +200,6 @@ export default function ProductEditPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              maxLength={30}
               required
             />
           </div>
@@ -169,7 +209,6 @@ export default function ProductEditPage() {
             <input
               className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100"
               type="number"
-              step="0.01"
               value={price}
               onChange={(e) => setPrice(Number(e.target.value))}
               required
