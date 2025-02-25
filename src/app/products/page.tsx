@@ -22,9 +22,9 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [limit, setLimit] = useState<number>(8);
   const [loading, setLoading] = useState<boolean>(false);
-
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<string>("asc");
 
   const fetchCategories = async () => {
     try {
@@ -32,23 +32,31 @@ export default function Home() {
       const data = await res.json();
       setCategories(data);
     } catch (error) {
-      console.error("Erro ao buscar categorias:", error);
+      console.error(error);
     }
   };
 
-  const fetchProducts = async (currentLimit: number, category: string) => {
+  const fetchProducts = async (
+    currentLimit: number,
+    category: string,
+    order: string
+  ) => {
     setLoading(true);
     try {
       let url = `https://fakestoreapi.com/products?limit=${currentLimit}`;
       if (category !== "all") {
-        url = `https://fakestoreapi.com/products/category/${category}`;
+        url = `https://fakestoreapi.com/products/category/${category}?limit=${currentLimit}`;
       }
       const response = await fetch(url);
       const data: Product[] = await response.json();
-      console.log(data);
+      if (order === "asc") {
+        data.sort((a, b) => a.price - b.price);
+      } else {
+        data.sort((a, b) => b.price - a.price);
+      }
       setProducts(data);
     } catch (error) {
-      console.error("Erro ao buscar produtos:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -59,16 +67,19 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetchProducts(limit, selectedCategory);
-  }, [limit, selectedCategory]);
+    fetchProducts(limit, selectedCategory, sortOrder);
+  }, [limit, selectedCategory, sortOrder]);
 
   const handleLoadMore = () => {
-    const newLimit = limit + 8;
-    setLimit(newLimit);
+    setLimit((prev) => prev + 8);
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
+  };
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortOrder(e.target.value);
   };
 
   return (
@@ -77,19 +88,31 @@ export default function Home() {
         Lista de Produtos (Ver Mais + Filtro)
       </h1>
 
-      <div className="mb-4 relative inline-block w-60">
-        <select
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          className="block w-full bg-white border border-gray-300 rounded px-4 py-2 pr-8 text-gray-700"
-        >
-          <option value="all">Todas as categorias</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+      <div className="flex items-center gap-4 mb-4">
+        <div className="relative inline-block w-60">
+          <select
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            className="block w-full bg-white border border-gray-300 rounded px-4 py-2 pr-8 text-gray-700"
+          >
+            <option value="all">Todas as categorias</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="relative inline-block w-44">
+          <select
+            value={sortOrder}
+            onChange={handleSortChange}
+            className="block w-full bg-white border border-gray-300 rounded px-4 py-2 pr-8 text-gray-700"
+          >
+            <option value="asc">Menor preço</option>
+            <option value="desc">Maior preço</option>
+          </select>
+        </div>
       </div>
 
       {loading && <p>Carregando...</p>}
