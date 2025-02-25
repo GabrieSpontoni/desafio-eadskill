@@ -48,12 +48,20 @@ export default function Home() {
         url = `https://fakestoreapi.com/products/category/${category}?limit=${currentLimit}`;
       }
       const response = await fetch(url);
-      const data: Product[] = await response.json();
+      let data: Product[] = await response.json();
+
+      const highlight = data.filter((p) => p.rating.rate > 4.5);
+      const normal = data.filter((p) => p.rating.rate <= 4.5);
+
       if (order === "asc") {
-        data.sort((a, b) => a.price - b.price);
+        highlight.sort((a, b) => a.price - b.price);
+        normal.sort((a, b) => a.price - b.price);
       } else {
-        data.sort((a, b) => b.price - a.price);
+        highlight.sort((a, b) => b.price - a.price);
+        normal.sort((a, b) => b.price - a.price);
       }
+
+      data = [...highlight, ...normal];
       setProducts(data);
     } catch (error) {
       console.error(error);
@@ -93,7 +101,7 @@ export default function Home() {
           <select
             value={selectedCategory}
             onChange={handleCategoryChange}
-            className="block w-full bg-white border border-gray-300 rounded px-4 py-2 pr-8 text-gray-700"
+            className="block w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 pr-8 text-gray-100"
           >
             <option value="all">Todas as categorias</option>
             {categories.map((cat) => (
@@ -107,7 +115,7 @@ export default function Home() {
           <select
             value={sortOrder}
             onChange={handleSortChange}
-            className="block w-full bg-white border border-gray-300 rounded px-4 py-2 pr-8 text-gray-700"
+            className="block w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 pr-8 text-gray-100"
           >
             <option value="asc">Menor preço</option>
             <option value="desc">Maior preço</option>
@@ -119,29 +127,40 @@ export default function Home() {
 
       {!loading && products.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="border p-4 flex flex-col items-center rounded"
-            >
-              <Image
-                src={product.image}
-                alt={product.title}
-                width={150}
-                height={150}
-                className="object-contain mb-2"
-              />
-              <h2 className="font-semibold text-center text-sm mb-1">
-                {product.title.length > 30
-                  ? product.title.slice(0, 30) + "..."
-                  : product.title}
-              </h2>
-              <p className="text-gray-500 text-sm mb-1">
-                $ {product.price.toFixed(2)}
-              </p>
-              <p className="text-xs text-gray-600 italic">{product.category}</p>
-            </div>
-          ))}
+          {products.map((product) => {
+            const isHighlight = product.rating.rate > 4.5;
+            return (
+              <div
+                key={product.id}
+                className={`p-4 flex flex-col items-center rounded border ${
+                  isHighlight
+                    ? "bg-yellow-700 border-yellow-400 text-gray-100"
+                    : "bg-gray-800 border-gray-700 text-gray-100"
+                }`}
+              >
+                {isHighlight && (
+                  <span className="mb-2 text-xs font-semibold">Destaque</span>
+                )}
+                <Image
+                  src={product.image}
+                  alt={product.title}
+                  width={150}
+                  height={150}
+                  className="object-contain mb-2"
+                />
+                <h2 className="font-semibold text-center text-sm mb-1">
+                  {product.title.length > 30
+                    ? product.title.slice(0, 30) + "..."
+                    : product.title}
+                </h2>
+                <p className="text-sm mb-1">$ {product.price.toFixed(2)}</p>
+                <p className="text-sm mb-1">
+                  Rating: {product.rating.rate.toFixed(1)}
+                </p>
+                <p className="text-xs italic">{product.category}</p>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -149,7 +168,7 @@ export default function Home() {
         <div className="flex justify-center mt-6">
           <button
             onClick={handleLoadMore}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
           >
             Ver mais
           </button>
