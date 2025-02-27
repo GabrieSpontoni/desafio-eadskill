@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Desafio EADSkill - CRUD de Produtos
 
-## Getting Started
+Este projeto tem como objetivo desenvolver uma página para gerenciar produtos, permitindo a criação, leitura, atualização e exclusão (CRUD) de itens. A aplicação utiliza a API pública [Fake Store API](https://fakestoreapi.com/) como fonte de dados, garantindo uma experiência prática para manipulação de produtos.
 
-First, run the development server:
+A aplicação foi desenvolvida utilizando o framework [Next.js](https://nextjs.org), proporcionando uma abordagem moderna para o desenvolvimento web com React.
+
+Este é um projeto desenvolvido com [Next.js](https://nextjs.org), criado utilizando [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Requisitos
+
+Antes de configurar e rodar a aplicação, certifique-se de ter os seguintes requisitos atendidos:
+
+- [Node.js](https://nodejs.org/) (versão 20 ou superior recomendada)
+- [npm](https://www.npmjs.com/) instalado
+
+## Configuração e Execução
+
+### 1. Clonar o repositório
+
+```bash
+git clone https://github.com/GabrieSpontoni/desafio-eadskill.git
+cd seu-repositorio
+```
+
+### 2. Instalar dependências
+
+```bash
+npm install
+```
+
+### 3. Rodar o servidor de desenvolvimento
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000) no seu navegador para visualizar a aplicação em execução.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Construir e rodar a versão de produção
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Para testar a aplicação em modo de produção localmente:
 
-## Learn More
+```bash
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Estrutura do Projeto
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+src/
+  ├── _tests_/
+  │   ├── createProductPage.test.tsx
+  │   ├── productCard.test.tsx
+  │   ├── productPage.test.tsx
+  │   ├── productsPage.test.tsx
+  │   ├── useProducts.test.tsx
+  ├── app/
+  │   ├── products/
+  │   │   ├── [id]/
+  │   │   ├── create/
+  │   │   ├── page.tsx
+  │   ├── favicon.ico
+  │   ├── globals.css
+  │   ├── layout.tsx
+  │   ├── page.tsx
+  ├── components/
+  │   ├── ProductCard.tsx
+  │   ├── ProductForm.tsx
+  ├── hooks/
+  │   ├── useProducts.ts
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tecnologias Utilizadas
 
-## Deploy on Vercel
+- [Jest](https://jestjs.io/) - Framework de testes para JavaScript e TypeScript
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [Next.js](https://nextjs.org/) - Framework para React
+- [React](https://react.dev/) - Biblioteca para interfaces
+- [Tailwind CSS](https://tailwindcss.com/) - Framework de estilização
+- [Zod](https://zod.dev/) - Biblioteca de validação de esquemas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Rodando os Testes
+
+Para executar os testes com Jest, utilize o seguinte comando:
+
+```bash
+npm run test
+```
+
+## Como Contribuir
+2. Crie uma branch para sua feature (`git checkout -b minha-feature`)
+3. Commit suas modificações (`git commit -m 'Adicionando minha feature'`)
+4. Envie para o repositório remoto (`git push origin minha-feature`)
+5. Abra um Pull Request
+
+## Fluxo da Aplicação
+
+O fluxo da aplicação pode ser visualizado no Figma:
+
+[Fluxo da Aplicação - Figma](https://www.figma.com/design/6TQ0QIzhtRkXE5Q7x5DXtI/Desafio-EADSkill?node-id=0-1&t=wiqKVjKCIG91dz0l-1)
+
+## Dúvidas?
+
+Se tiver alguma dúvida, abra uma issue neste repositório ou entre em contato com o mantenedor do projeto.
+
+---
+
+Este README foi elaborado para fornecer instruções claras e objetivas para configuração e execução da aplicação.
+
