@@ -37,7 +37,7 @@ export function ProductForm<T extends BaseProductFormValues>({
     const { name, value, type } = e.target;
     setValues((prev) => ({
       ...prev,
-      [name]: type === "number" ? Number(value) : value
+      [name]: type === "number" ? Number(value) : value,
     }));
   }
 
@@ -58,7 +58,8 @@ export function ProductForm<T extends BaseProductFormValues>({
   return (
     <div className="max-w-md w-full bg-gray-800 p-6 rounded border border-gray-700 relative">
       <div className="bg-orange-600 text-white text-sm rounded p-2 mb-4 font-semibold">
-        Atenção: as operações de criação/edição não são persistidas permanentemente.
+        Atenção: as operações de criação/edição não são persistidas
+        permanentemente.
       </div>
 
       <h1 className="text-xl font-bold mb-4 text-center">{titleForm}</h1>
@@ -73,8 +74,11 @@ export function ProductForm<T extends BaseProductFormValues>({
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col">
-          <label className="text-sm font-medium mb-1">Título</label>
+          <label htmlFor="title" className="text-sm font-medium mb-1">
+            Título
+          </label>
           <input
+            id="title"
             className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100"
             type="text"
             name="title"
@@ -84,8 +88,11 @@ export function ProductForm<T extends BaseProductFormValues>({
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium mb-1">Preço</label>
+          <label htmlFor="price" className="text-sm font-medium mb-1">
+            Preço
+          </label>
           <input
+            id="price"
             className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100"
             type="number"
             step="0.01"
@@ -96,8 +103,11 @@ export function ProductForm<T extends BaseProductFormValues>({
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium mb-1">Descrição</label>
+          <label htmlFor="description" className="text-sm font-medium mb-1">
+            Descrição
+          </label>
           <textarea
+            id="description"
             className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100"
             name="description"
             rows={3}
@@ -106,22 +116,26 @@ export function ProductForm<T extends BaseProductFormValues>({
           />
         </div>
 
-        
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">Categoria</label>
-            <input
-              className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100 disabled:cursor-not-allowed"
-              name="category"
-              value={values.category ?? ""}
-              onChange={handleChange}
-              disabled={disabledCategoryField}
-            />
-          </div>
-        
+        <div className="flex flex-col">
+          <label htmlFor="category" className="text-sm font-medium mb-1">
+            Categoria
+          </label>
+          <input
+            id="category"
+            className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100 disabled:cursor-not-allowed"
+            name="category"
+            value={values.category ?? ""}
+            onChange={handleChange}
+            disabled={disabledCategoryField}
+          />
+        </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium mb-1">URL da Imagem</label>
+          <label htmlFor="image" className="text-sm font-medium mb-1">
+            URL da Imagem
+          </label>
           <input
+            id="image"
             className="border border-gray-600 bg-gray-700 p-2 rounded text-gray-100"
             type="text"
             name="image"

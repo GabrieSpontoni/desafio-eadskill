@@ -33,7 +33,7 @@ const updateProductSchema = z.object({
   category: z.string().min(1, "Categoria é obrigatória"),
 });
 
-export default function EditProductPage() {
+export default function ProductPage() {
   const router = useRouter();
   const params = useParams() as { id: string };
 
